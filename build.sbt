@@ -22,3 +22,24 @@ libraryDependencies ++= Seq(
 assemblySettings
 
 mainClass in assembly := Some("de.leanovate.dose.cart.Application")
+
+val debian = TaskKey[Unit]("debian", "Create debian package")
+
+debian <<= (assembly, baseDirectory, version) map { (asm, base, ver) =>
+  val release = ver + "-" + System.getenv("TRAVIS_BUILD_NUMBER")
+  val debOut = (base / "target" / "microzon-cart.deb")
+  val debBase = (base / "target" / "deb")
+  IO.copyFile(asm, debBase / "opt" / "cart" / "cart.jar")
+  IO.write(debBase / "DEBIAN" / "control",
+    s"""Package: microzon-customer
+    |Version: $release
+    |Section: misc
+    |Priority: extra
+    |Architecture: all
+    |Depends: supervisor, oracle-java8-installer
+    |Maintainer: Bodo Junglas <landru@untoldwind.net>
+    |Homepage: http://github.com/leanovate/microzon
+    |Description: Customer service
+    |""".stripMargin)
+  s"/usr/bin/fakeroot /usr/bin/dpkg-deb -b ${debBase.getPath} ${debOut.getPath}" !
+}
