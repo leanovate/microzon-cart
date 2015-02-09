@@ -34,7 +34,7 @@ debian <<= (assembly, baseDirectory, version) map { (asm, base, ver) =>
   IO.copyFile(asm, debBase / "opt" / "cart" / "cart.jar")
   IO.copyFile(base / "src" / "main" / "supervisor" / "cart.conf", debBase / "etc" / "supervisor" / "conf.d" / "cart.conf")
   IO.write(debBase / "DEBIAN" / "control",
-    s"""Package: microzon-customer
+    s"""Package: microzon-cart
     |Version: $release
     |Section: misc
     |Priority: extra
