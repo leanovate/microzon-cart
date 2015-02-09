@@ -26,10 +26,13 @@ mainClass in assembly := Some("de.leanovate.dose.cart.Application")
 val debian = TaskKey[Unit]("debian", "Create debian package")
 
 debian <<= (assembly, baseDirectory, version) map { (asm, base, ver) =>
+  val bintrayUser = System.getenv("BINTRAY_USER")
+  val bintrayKey = System.getenv("BINTRAY_KEY")
   val release = ver + "-" + System.getenv("TRAVIS_BUILD_NUMBER")
   val debOut = (base / "target" / "microzon-cart.deb")
   val debBase = (base / "target" / "deb")
   IO.copyFile(asm, debBase / "opt" / "cart" / "cart.jar")
+  IO.copyFile(base / "src" / "main" / "supervisor" / "cart.conf", debBase / "etc" / "supervisor" / "conf.d" / "cart.conf")
   IO.write(debBase / "DEBIAN" / "control",
     s"""Package: microzon-customer
     |Version: $release
@@ -42,4 +45,5 @@ debian <<= (assembly, baseDirectory, version) map { (asm, base, ver) =>
     |Description: Customer service
     |""".stripMargin)
   s"/usr/bin/fakeroot /usr/bin/dpkg-deb -b ${debBase.getPath} ${debOut.getPath}" !
+  s"/usr/bin/curl -T ${debOut.getPath} -u${bintrayUser}:${bintrayKey} https://api.bintray.com/content/untoldwind/deb/microzon/${ver)/pool/main/m/microzon/microzon-cart-${release}_all.deb;deb_distribution=trusty;deb_component=main;deb_architecture=all?publish=1" !
 }
